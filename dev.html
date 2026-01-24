@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Widget DS - Mode Développement</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div
+        style="
+          background: #ffeb3b;
+          padding: 12px;
+          border-radius: 8px;
+          margin-bottom: 20px;
+          border: 2px solid #000;
+        "
+      >
+        <strong>⚠️ MODE DÉVELOPPEMENT</strong> - Ce fichier simule le widget
+        Grist pour tests locaux
+      </div>
+
+      <!-- Header -->
+      <header class="header">
+        <div class="logo">
+          <!-- # LOGO ICI : Remplacer le div.logo-placeholder par ton logo SVG ou image -->
+          <div class="logo-placeholder">WIP</div>
+        </div>
+        <h1 class="title">Work in Progress</h1>
+      </header>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <!-- Card 1: Total -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <svg
+              class="stat-icon"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+            <span class="stat-label">TOTAL</span>
+          </div>
+          <div class="stat-value" id="total-value">42</div>
+          <div class="stat-subtitle">Lignes</div>
+        </div>
+
+        <!-- Card 2: À synchroniser (ACCENT CARD) -->
+        <div class="stat-card stat-card-accent">
+          <div class="stat-header">
+            <svg
+              class="stat-icon"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span class="stat-label">À SYNCHRONISER</span>
+          </div>
+          <div class="stat-value" id="pending-value">15</div>
+          <div class="stat-subtitle">En attente</div>
+        </div>
+
+        <!-- Card 3: Succès -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <svg
+              class="stat-icon"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span class="stat-label">SUCCÈS</span>
+          </div>
+          <div class="stat-value" id="success-value">25</div>
+          <div class="stat-subtitle">Traités</div>
+        </div>
+
+        <!-- Card 4: Échec -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <svg
+              class="stat-icon"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            <span class="stat-label">ÉCHEC</span>
+          </div>
+          <div class="stat-value" id="error-value">2</div>
+          <div class="stat-subtitle">Erreurs</div>
+        </div>
+      </div>
+
+      <!-- Actions Section -->
+      <div class="actions-section">
+        <h2 class="actions-title">Actions</h2>
+        <div class="actions-buttons">
+          <button id="launch-btn" class="btn btn-primary">
+            Lancer le traitement
+          </button>
+        </div>
+      </div>
+
+      <!-- Status Message -->
+      <div id="status-message" class="status-message hidden"></div>
+
+      <!-- Progress Bar -->
+      <div id="progress-container" class="progress-container hidden">
+        <div class="progress-bar">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <div id="progress-text" class="progress-text">
+          Traitement en cours...
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Script de dev simplifié pour tester l'UI
+      document
+        .getElementById("launch-btn")
+        .addEventListener("click", async () => {
+          const btn = document.getElementById("launch-btn");
+          const statusEl = document.getElementById("status-message");
+          const progressContainer =
+            document.getElementById("progress-container");
+          const progressFill = document.getElementById("progress-fill");
+          const progressText = document.getElementById("progress-text");
+
+          // Désactiver le bouton
+          btn.disabled = true;
+          btn.textContent = "Traitement en cours...";
+
+          // Afficher la progress bar
+          progressContainer.classList.remove("hidden");
+
+          // Afficher status
+          statusEl.textContent = "Démarrage du traitement...";
+          statusEl.className = "status-message info";
+          statusEl.classList.remove("hidden");
+
+          // Simuler une progression
+          for (let i = 0; i <= 100; i += 10) {
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            progressFill.style.width = i + "%";
+            progressText.textContent = `Traitement en cours... ${i}%`;
+          }
+
+          // Simuler succès
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          statusEl.textContent =
+            "✅ Traitement terminé ! 15 ligne(s) traitée(s)";
+          statusEl.className = "status-message success";
+
+          // Mettre à jour les stats
+          document.getElementById("pending-value").textContent = "0";
+          document.getElementById("success-value").textContent = "40";
+
+          // Masquer la progress bar après 2 secondes
+          setTimeout(() => {
+            progressContainer.classList.add("hidden");
+            btn.disabled = false;
+            btn.textContent = "Lancer le traitement";
+          }, 2000);
+        });
+    </script>
+  </body>
+</html>
