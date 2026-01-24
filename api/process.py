@@ -150,6 +150,51 @@ def get_first_empty_row(dossier_number, repetition_champ_id, ds_token):
     
     return None
 
+def find_existing_row_by_block_id(dossier_number, repetition_champ_id, block_row_id, ds_token):
+    """Cherche le champ DS correspondant à ce block_row_id Grist"""
+    query = """
+    query getDossier($dossierNumber: Int!) {
+      dossier(number: $dossierNumber) {
+        annotations {
+          id
+          ... on RepetitionChamp {
+            rows {
+              id
+              champs {
+                id
+              }
+            }
+          }
+        }
+      }
+    }
+    """
+    
+    headers = {
+        "Authorization": f"Bearer {ds_token}",
+        "Content-Type": "application/json"
+    }
+    
+    response = requests.post(DS_API_URL, headers=headers,
+                           json={"query": query, "variables": {"dossierNumber": dossier_number}})
+    result = response.json()
+    
+    if result.get('errors') or not result.get('data'):
+        return None
+    
+    annotations = result['data']['dossier']['annotations']
+    repetition = next((a for a in annotations if a['id'] == repetition_champ_id), None)
+    
+    if not repetition or 'rows' not in repetition:
+        return None
+    
+    # Chercher la row avec cet ID
+    for row in repetition['rows']:
+        if row['id'] == block_row_id:
+            return row['champs'][0]['id']  # Retourner l'ID du champ à mettre à jour
+    
+    return None
+
 def add_line_to_ds(dossier_id, instructeur_id, champ_repetable_id, ds_token):
     """Ajoute une ligne vide dans DS"""
     mutation = """
@@ -159,6 +204,7 @@ def add_line_to_ds(dossier_id, instructeur_id, champ_repetable_id, ds_token):
           id
           ... on RepetitionChamp {
             rows {
+              id
               champs {
                 id
                 stringValue
@@ -250,37 +296,54 @@ def update_grist_status(record_id, success, message, grist_server, grist_doc_id,
     response = requests.patch(api_url, headers=headers, json=data)
     return response.json()
 
-def process_record_with_retry(dossier_id, dossier_number, record_id, donnees_dn, 
+def process_record_with_retry(dossier_id, dossier_number, record_id, donnees_dn, block_row_id,
                               ds_token, instructeur_id, champ_repetable_id,
                               grist_server, grist_doc_id, grist_table_id, grist_token,
                               max_retries=3, delay=5):
     """Traite un record avec retry automatique"""
     
-    # Vérifier si données existent déjà
-    if check_if_data_exists(dossier_number, champ_repetable_id, donnees_dn, ds_token):
-        update_grist_status(record_id, True, "", grist_server, grist_doc_id, grist_table_id, grist_token)
-        return True
-    
     for attempt in range(1, max_retries + 1):
         try:
-            empty_row_id = get_first_empty_row(dossier_number, champ_repetable_id, ds_token)
+            # 1. Chercher si cette ligne existe déjà dans DS (via block_row_id)
+            existing_champ_id = None
+            if block_row_id:
+                existing_champ_id = find_existing_row_by_block_id(
+                    dossier_number, champ_repetable_id, block_row_id, ds_token
+                )
             
-            if empty_row_id:
-                result_fill = fill_line_in_ds(dossier_id, instructeur_id, empty_row_id, donnees_dn, ds_token)
+            if existing_champ_id:
+                # Mettre à jour la ligne existante
+                print(f"  🔄 Mise à jour ligne existante pour record {record_id} (tentative {attempt}/{max_retries})")
+                result_fill = fill_line_in_ds(dossier_id, instructeur_id, existing_champ_id, donnees_dn, ds_token)
             else:
-                result_add = add_line_to_ds(dossier_id, instructeur_id, champ_repetable_id, ds_token)
+                # Vérifier si données existent déjà (par contenu)
+                if check_if_data_exists(dossier_number, champ_repetable_id, donnees_dn, ds_token):
+                    print(f"  ℹ️  Record {record_id}: données déjà présentes dans DS, skipping")
+                    update_grist_status(record_id, True, "", grist_server, grist_doc_id, grist_table_id, grist_token)
+                    return True
                 
-                if result_add.get('errors'):
-                    raise Exception(f"Erreur GraphQL: {result_add['errors']}")
+                # Vérifier s'il y a une ligne vide disponible
+                empty_row_id = get_first_empty_row(dossier_number, champ_repetable_id, ds_token)
                 
-                mutation_result = result_add['data']['dossierModifierAnnotationAjouterLigne']
-                if mutation_result.get('errors'):
-                    raise Exception(f"Erreur mutation: {mutation_result['errors']}")
-                
-                rows = mutation_result['annotation']['rows']
-                new_champ_id = rows[-1]['champs'][0]['id']
-                result_fill = fill_line_in_ds(dossier_id, instructeur_id, new_champ_id, donnees_dn, ds_token)
+                if empty_row_id:
+                    print(f"  📝 Utilisation ligne vide existante pour record {record_id} (tentative {attempt}/{max_retries})")
+                    result_fill = fill_line_in_ds(dossier_id, instructeur_id, empty_row_id, donnees_dn, ds_token)
+                else:
+                    print(f"  ➕ Création nouvelle ligne pour record {record_id} (tentative {attempt}/{max_retries})")
+                    result_add = add_line_to_ds(dossier_id, instructeur_id, champ_repetable_id, ds_token)
+                    
+                    if result_add.get('errors'):
+                        raise Exception(f"Erreur GraphQL: {result_add['errors']}")
+                    
+                    mutation_result = result_add['data']['dossierModifierAnnotationAjouterLigne']
+                    if mutation_result.get('errors'):
+                        raise Exception(f"Erreur mutation: {mutation_result['errors']}")
+                    
+                    rows = mutation_result['annotation']['rows']
+                    new_champ_id = rows[-1]['champs'][0]['id']
+                    result_fill = fill_line_in_ds(dossier_id, instructeur_id, new_champ_id, donnees_dn, ds_token)
             
+            # Vérifier le remplissage
             if result_fill.get('errors'):
                 raise Exception(f"Erreur GraphQL: {result_fill['errors']}")
             
@@ -352,12 +415,13 @@ class handler(BaseHTTPRequestHandler):
                     for enfant in records:
                         record_id = enfant['id']
                         donnees_dn = enfant['fields'].get('Donnees_DN')
+                        block_row_id = enfant['fields'].get('block_row_id')
                         
                         if not donnees_dn:
                             continue
                         
                         if process_record_with_retry(
-                            dossier_id, dossier_number, record_id, donnees_dn,
+                            dossier_id, dossier_number, record_id, donnees_dn, block_row_id,
                             ds_token, instructeur_id, champ_repetable_id,
                             grist_server, grist_doc_id, grist_table_id, grist_token
                         ):
