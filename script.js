@@ -1,4 +1,4 @@
-$; // Configuration - À adapter selon ton environnement Grist
+// Configuration - À adapter selon ton environnement Grist
 const CONFIG = {
   // Ces valeurs seront récupérées depuis le Custom Widget Grist
   gristDocId: null,
