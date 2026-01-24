@@ -31,17 +31,8 @@ body {
 
 .logo {
   /* # LOGO : Ajuster la taille si nécessaire */
-  width: 150px;
-  height: 150px;
-  flex-shrink: 0; /* Empêche le logo de rétrécir */
-}
-
-/* Ajoute aussi ceci pour contraindre l'image/svg à l'intérieur */
-.logo img,
-.logo svg {
-  width: 100%;
-  height: 100%;
-  object-fit: contain; /* Garde les proportions */
+  width: 60px;
+  height: 60px;
 }
 
 .logo-placeholder {
@@ -56,14 +47,6 @@ body {
   font-weight: bold;
   font-size: 14px;
   border-radius: 8px;
-}
-
-/* Responsive : réduire sur petits écrans */
-@media (max-width: 768px) {
-  .logo {
-    width: 60px;
-    height: 60px;
-  }
 }
 
 .title {
@@ -186,6 +169,27 @@ body {
 }
 
 .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: #fff;
+  color: #000;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #f5f5f5;
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 0 #000;
+}
+
+.btn-secondary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 2px 2px 0 #000;
+}
+
+.btn-secondary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
