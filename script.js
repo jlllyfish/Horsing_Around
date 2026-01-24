@@ -23,31 +23,22 @@ let refreshTimer = null;
 // Initialize Grist Custom Widget
 async function initGristWidget() {
   try {
-    // Attendre que Grist soit prêt
-    await grist.ready();
+    if (typeof grist !== "undefined") {
+      // Attendre que Grist soit prêt
+      await grist.ready();
+      console.log("✅ Grist ready");
+    }
 
-    // Récupérer l'access token et doc ID depuis Grist
-    const table = await grist.selectedTable.getTableId();
-    const accessToken = await grist.docApi.getAccessToken();
-
-    CONFIG.gristTableId = table;
-    CONFIG.gristAccessToken = accessToken;
-
-    // Récupérer le doc ID depuis l'URL
-    const urlParams = new URLSearchParams(window.location.search);
-    CONFIG.gristDocId = urlParams.get("docId") || getDocIdFromUrl();
-
-    console.log("✅ Grist widget initialized");
-
-    // Charger les stats initiales
+    // Charger les stats initiales (l'API utilise les variables d'env)
     await loadStats();
 
     // Démarrer le refresh automatique
     startAutoRefresh();
   } catch (error) {
-    console.error("❌ Erreur initialisation Grist:", error);
-    // Fallback si pas dans Grist (développement local)
-    console.log("⚠️ Mode développement - utilisation config par défaut");
+    console.error("❌ Erreur initialisation:", error);
+    // Continuer quand même en mode dégradé
+    await loadStats();
+    startAutoRefresh();
   }
 }
 
@@ -63,20 +54,8 @@ async function loadStats() {
   try {
     showStatus("Chargement des statistiques...", "info");
 
-    // Appeler l'API stats
-    const url = new URL("/api/stats", window.location.origin);
-
-    // Ajouter les paramètres si disponibles
-    if (CONFIG.gristDocId)
-      url.searchParams.append("gristDocId", CONFIG.gristDocId);
-    if (CONFIG.gristTableId)
-      url.searchParams.append("gristTableId", CONFIG.gristTableId);
-    if (CONFIG.gristAccessToken)
-      url.searchParams.append("gristAccessToken", CONFIG.gristAccessToken);
-    if (CONFIG.gristServer)
-      url.searchParams.append("gristServer", CONFIG.gristServer);
-
-    const response = await fetch(url);
+    // Appeler l'API stats (utilise les variables d'env côté serveur)
+    const response = await fetch("/api/stats");
 
     if (!response.ok) {
       throw new Error(`Erreur API: ${response.status}`);
