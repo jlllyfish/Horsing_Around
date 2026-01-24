@@ -189,10 +189,13 @@ def find_existing_row_by_block_id(dossier_number, repetition_champ_id, block_row
         return None
     
     # Chercher la row avec cet ID
+    print(f"  🔎 Rows disponibles dans DS:")
     for row in repetition['rows']:
+        print(f"    - row['id']: {row['id']}")
         if row['id'] == block_row_id:
             return row['champs'][0]['id']  # Retourner l'ID du champ à mettre à jour
-    
+        
+    print(f"  ❌ block_row_id {block_row_id} non trouvé dans DS")
     return None
 
 def add_line_to_ds(dossier_id, instructeur_id, champ_repetable_id, ds_token):
