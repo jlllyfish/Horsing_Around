@@ -307,10 +307,11 @@ def process_record_with_retry(dossier_id, dossier_number, record_id, donnees_dn,
             # 1. Chercher si cette ligne existe déjà dans DS (via block_row_id)
             existing_champ_id = None
             if block_row_id:
+                print(f"  🔍 Recherche block_row_id: {block_row_id}")
                 existing_champ_id = find_existing_row_by_block_id(
                     dossier_number, champ_repetable_id, block_row_id, ds_token
                 )
-            
+                 print(f"  📍 Résultat recherche: {existing_champ_id}")
             if existing_champ_id:
                 # Mettre à jour la ligne existante
                 print(f"  🔄 Mise à jour ligne existante pour record {record_id} (tentative {attempt}/{max_retries})")
