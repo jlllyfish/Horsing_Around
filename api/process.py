@@ -304,6 +304,8 @@ def process_record_with_retry(dossier_id, dossier_number, record_id, donnees_dn,
     
     for attempt in range(1, max_retries + 1):
         try:
+            # DEBUG : Afficher le block_row_id reçu
+            print(f"  🐛 DEBUG - block_row_id reçu: {repr(block_row_id)}")
             # 1. Chercher si cette ligne existe déjà dans DS (via block_row_id)
             existing_champ_id = None
             if block_row_id:
