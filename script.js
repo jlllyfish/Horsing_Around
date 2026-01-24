@@ -7,7 +7,7 @@ const CONFIG = {
   gristServer: "https://grist.numerique.gouv.fr",
 
   // Polling interval (ms)
-  refreshInterval: 5000,
+  refreshInterval: 30000, // 30 secondes
 
   // API endpoints (Vercel serverless functions)
   apiEndpoints: {
@@ -29,15 +29,15 @@ async function initGristWidget() {
       console.log("✅ Grist ready");
     }
 
-    // Charger les stats initiales (l'API utilise les variables d'env)
-    await loadStats();
+    // Charger les stats initiales avec message
+    await loadStats(true);
 
     // Démarrer le refresh automatique
     startAutoRefresh();
   } catch (error) {
     console.error("❌ Erreur initialisation:", error);
     // Continuer quand même en mode dégradé
-    await loadStats();
+    await loadStats(true);
     startAutoRefresh();
   }
 }
@@ -50,9 +50,11 @@ function getDocIdFromUrl() {
 }
 
 // Charger les statistiques depuis l'API
-async function loadStats() {
+async function loadStats(showMessage = false) {
   try {
-    showStatus("Chargement des statistiques...", "info");
+    if (showMessage) {
+      showStatus("Chargement des statistiques...", "info");
+    }
 
     // Appeler l'API stats (utilise les variables d'env côté serveur)
     const response = await fetch("/api/stats");
@@ -70,10 +72,14 @@ async function loadStats() {
     // Mettre à jour l'interface
     updateStatsDisplay(data.stats);
 
-    hideStatus();
+    if (showMessage) {
+      hideStatus();
+    }
   } catch (error) {
     console.error("❌ Erreur chargement stats:", error);
-    showStatus("Erreur lors du chargement des statistiques", "error");
+    if (showMessage) {
+      showStatus("Erreur lors du chargement des statistiques", "error");
+    }
   }
 }
 
@@ -130,8 +136,8 @@ async function launchProcess() {
       throw new Error(result.error || "Erreur inconnue");
     }
 
-    // Recharger les stats
-    await loadStats();
+    // Recharger les stats avec message
+    await loadStats(true);
 
     // Masquer la progress bar après 3 secondes
     setTimeout(() => {
@@ -194,10 +200,10 @@ function startAutoRefresh() {
     clearInterval(refreshTimer);
   }
 
-  // Créer un nouveau timer
+  // Créer un nouveau timer - refresh silencieux
   refreshTimer = setInterval(async () => {
     if (!isProcessing) {
-      await loadStats();
+      await loadStats(false); // false = silencieux
     }
   }, CONFIG.refreshInterval);
 }
@@ -216,6 +222,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("launch-btn")
     .addEventListener("click", launchProcess);
+
+  // Bouton refresh stats
+  document
+    .getElementById("refresh-btn")
+    .addEventListener("click", () => loadStats(true));
 
   // Initialiser le widget Grist
   if (typeof grist !== "undefined") {
