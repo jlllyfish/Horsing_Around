@@ -31,8 +31,17 @@ body {
 
 .logo {
   /* # LOGO : Ajuster la taille si nécessaire */
-  width: 60px;
-  height: 60px;
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0; /* Empêche le logo de rétrécir */
+}
+
+/* Ajoute aussi ceci pour contraindre l'image/svg à l'intérieur */
+.logo img,
+.logo svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Garde les proportions */
 }
 
 .logo-placeholder {
@@ -47,6 +56,14 @@ body {
   font-weight: bold;
   font-size: 14px;
   border-radius: 8px;
+}
+
+/* Responsive : réduire sur petits écrans */
+@media (max-width: 768px) {
+  .logo {
+    width: 60px;
+    height: 60px;
+  }
 }
 
 .title {
