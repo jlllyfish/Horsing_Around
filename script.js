@@ -219,26 +219,26 @@ function stopAutoRefresh() {
 // Event listeners
 document.addEventListener("DOMContentLoaded", () => {
   // Bouton lancer traitement
-  document
-    .getElementById("launch-btn")
-    .addEventListener("click", launchProcess);
-
+  document.getElementById("launch-btn").addEventListener("click", launchProcess);
+  
   // Bouton refresh stats
-  document
-    .getElementById("refresh-btn")
-    .addEventListener("click", () => loadStats(true));
+  document.getElementById("refresh-btn").addEventListener("click", () => loadStats(true));
 
-  // Initialiser le widget Grist
-  if (typeof grist !== "undefined") {
-    initGristWidget();
-  } else {
-    console.log("⚠️ Grist API non disponible - mode développement");
-    // En dev, afficher des valeurs par défaut
-    updateStatsDisplay({ total: 0, pending: 0, success: 0, error: 0 });
-  }
-});
-
-// Cleanup au déchargement de la page
-window.addEventListener("beforeunload", () => {
-  stopAutoRefresh();
+  // Attendre que Grist soit disponible
+  const checkGrist = setInterval(() => {
+    if (typeof grist !== "undefined") {
+      clearInterval(checkGrist);
+      console.log("✅ Grist API détectée");
+      initGristWidget();
+    }
+  }, 100);
+  
+  // Timeout après 5 secondes si Grist pas disponible
+  setTimeout(() => {
+    if (typeof grist === "undefined") {
+      clearInterval(checkGrist);
+      console.log("⚠️ Grist API non disponible - mode développement");
+      updateStatsDisplay({ total: 0, pending: 0, success: 0, error: 0 });
+    }
+  }, 5000);
 });
