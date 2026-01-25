@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Horsing Around - Synchronisation DS</title>
+    <title>Work in Progress - Synchronisation DS</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -12,9 +12,9 @@
       <header class="header">
         <div class="logo">
           <!-- # LOGO ICI : Remplacer le div.logo-placeholder par ton logo SVG ou image -->
-          <img src="horse.svg" alt="Logo" />
+          <div class="logo-placeholder">WIP</div>
         </div>
-        <h1 class="title">Horsing Around</h1>
+        <h1 class="title">Work in Progress</h1>
       </header>
 
       <!-- Stats Grid -->
@@ -106,6 +106,29 @@
           <div class="stat-value" id="error-value">-</div>
           <div class="stat-subtitle">Erreurs</div>
         </div>
+
+        <!-- Card 5: Avis Saisis -->
+        <div class="stat-card">
+          <div class="stat-header">
+            <!-- # ICON ICI : Icône stylo pour AVIS SAISIS -->
+            <svg
+              class="stat-icon"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"
+              ></path>
+            </svg>
+            <span class="stat-label">AVIS SAISIS</span>
+          </div>
+          <div class="stat-value" id="avis-value">- / -</div>
+          <div class="stat-subtitle">Complétés</div>
+        </div>
       </div>
 
       <!-- Actions Section -->
@@ -135,8 +158,6 @@
       </div>
     </div>
 
-    <!-- Grist API -->
-<script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
-<script src="script.js"></script>
+    <script src="script.js"></script>
   </body>
 </html>
