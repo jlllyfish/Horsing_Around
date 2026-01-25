@@ -11,6 +11,10 @@ def calculate_stats(records):
     """Calcule les statistiques depuis les records Grist"""
     total = len(records)
     
+    # Avis complétés : Avis_Instructeur non vide
+    avis_completed = len([r for r in records 
+                         if r['fields'].get('Avis_Instructeur', '').strip()])
+    
     # À synchroniser : Envoi_DN vide OU commence par "Échec"
     pending = len([r for r in records 
                    if not r['fields'].get('Envoi_DN') 
@@ -28,7 +32,8 @@ def calculate_stats(records):
         'total': total,
         'pending': pending,
         'success': success,
-        'error': error
+        'error': error,
+        'avisCompleted': avis_completed
     }
 
 class handler(BaseHTTPRequestHandler):
