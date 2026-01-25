@@ -151,7 +151,7 @@ def get_first_empty_row(dossier_number, repetition_champ_id, ds_token):
     return None
 
 def find_existing_row_by_block_id(dossier_number, repetition_champ_id, block_row_id, ds_token):
-    """Cherche le champ DS correspondant à ce block_row_id Grist"""
+    """Cherche le champ DS correspondant à ce block_row_id_annotations"""
     query = """
     query getDossier($dossierNumber: Int!) {
       dossier(number: $dossierNumber) {
@@ -189,13 +189,10 @@ def find_existing_row_by_block_id(dossier_number, repetition_champ_id, block_row
         return None
     
     # Chercher la row avec cet ID
-    print(f"  🔎 Rows disponibles dans DS:")
     for row in repetition['rows']:
-        print(f"    - row['id']: {row['id']}")
         if row['id'] == block_row_id:
-            return row['champs'][0]['id']  # Retourner l'ID du champ à mettre à jour
-        
-    print(f"  ❌ block_row_id {block_row_id} non trouvé dans DS")
+            return row['champs'][0]['id']
+    
     return None
 
 def add_line_to_ds(dossier_id, instructeur_id, champ_repetable_id, ds_token):
@@ -299,7 +296,30 @@ def update_grist_status(record_id, success, message, grist_server, grist_doc_id,
     response = requests.patch(api_url, headers=headers, json=data)
     return response.json()
 
-def process_record_with_retry(dossier_id, dossier_number, record_id, donnees_dn, block_row_id,
+def update_grist_block_row_id(record_id, block_row_id, grist_server, grist_doc_id, grist_table_id, grist_token):
+    """Met à jour le block_row_id_annotations dans Grist"""
+    fields = {
+        "block_row_id_annotations": block_row_id
+    }
+    
+    api_url = f"{grist_server}/api/docs/{grist_doc_id}/tables/{grist_table_id}/records"
+    
+    headers = {
+        "Authorization": f"Bearer {grist_token}",
+        "Content-Type": "application/json"
+    }
+    
+    data = {
+        "records": [{
+            "id": record_id,
+            "fields": fields
+        }]
+    }
+    
+    response = requests.patch(api_url, headers=headers, json=data)
+    return response.json()
+
+def process_record_with_retry(dossier_id, dossier_number, record_id, donnees_dn, block_row_id_annotations,
                               ds_token, instructeur_id, champ_repetable_id,
                               grist_server, grist_doc_id, grist_table_id, grist_token,
                               max_retries=3, delay=5):
@@ -307,16 +327,15 @@ def process_record_with_retry(dossier_id, dossier_number, record_id, donnees_dn,
     
     for attempt in range(1, max_retries + 1):
         try:
-            # DEBUG : Afficher le block_row_id reçu
-            print(f"  🐛 DEBUG - block_row_id reçu: {repr(block_row_id)}")
-            # 1. Chercher si cette ligne existe déjà dans DS (via block_row_id)
+            # 1. Chercher si cette ligne existe déjà dans DS (via block_row_id_annotations)
             existing_champ_id = None
-            if block_row_id:
-                print(f"  🔍 Recherche block_row_id: {block_row_id}")
+            if block_row_id_annotations:
+                print(f"  🔍 Recherche block_row_id_annotations: {block_row_id_annotations}")
                 existing_champ_id = find_existing_row_by_block_id(
-                    dossier_number, champ_repetable_id, block_row_id, ds_token
+                    dossier_number, champ_repetable_id, block_row_id_annotations, ds_token
                 )
                 print(f"  📍 Résultat recherche: {existing_champ_id}")
+            
             if existing_champ_id:
                 # Mettre à jour la ligne existante
                 print(f"  🔄 Mise à jour ligne existante pour record {record_id} (tentative {attempt}/{max_retries})")
@@ -346,7 +365,13 @@ def process_record_with_retry(dossier_id, dossier_number, record_id, donnees_dn,
                         raise Exception(f"Erreur mutation: {mutation_result['errors']}")
                     
                     rows = mutation_result['annotation']['rows']
+                    new_row_id = rows[-1]['id']  # L'ID de la row DS créée
                     new_champ_id = rows[-1]['champs'][0]['id']
+                    
+                    # Stocker le row_id DS dans Grist
+                    print(f"  💾 Stockage row_id DS dans Grist: {new_row_id}")
+                    update_grist_block_row_id(record_id, new_row_id, grist_server, grist_doc_id, grist_table_id, grist_token)
+                    
                     result_fill = fill_line_in_ds(dossier_id, instructeur_id, new_champ_id, donnees_dn, ds_token)
             
             # Vérifier le remplissage
@@ -421,13 +446,13 @@ class handler(BaseHTTPRequestHandler):
                     for enfant in records:
                         record_id = enfant['id']
                         donnees_dn = enfant['fields'].get('Donnees_DN')
-                        block_row_id = enfant['fields'].get('block_row_id')
+                        block_row_id_annotations = enfant['fields'].get('block_row_id_annotations')
                         
                         if not donnees_dn:
                             continue
                         
                         if process_record_with_retry(
-                            dossier_id, dossier_number, record_id, donnees_dn, block_row_id,
+                            dossier_id, dossier_number, record_id, donnees_dn, block_row_id_annotations,
                             ds_token, instructeur_id, champ_repetable_id,
                             grist_server, grist_doc_id, grist_table_id, grist_token
                         ):
