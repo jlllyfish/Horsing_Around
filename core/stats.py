@@ -13,7 +13,7 @@ def calculate_stats(records):
     
     # Avis complétés : Avis_Instructeur non vide
     avis_completed = len([r for r in records 
-                         if r['fields'].get('Avis_Instructeur', '').strip()])
+                         if r['fields'].get('Avis_commission', '').strip()])
     
     # À synchroniser : Envoi_DN vide OU commence par "Échec"
     pending = len([r for r in records 
