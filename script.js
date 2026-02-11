@@ -108,16 +108,18 @@ async function launchProcess() {
     showProgress(0, "Initialisation...");
 
     // Appeler l'API Vercel serverless function
+    // ✅ NE PAS envoyer les tokens depuis le client
     const response = await fetch(CONFIG.apiEndpoints.process, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        // Envoyer uniquement les identifiants non-sensibles
         gristDocId: CONFIG.gristDocId,
         gristTableId: CONFIG.gristTableId,
-        gristAccessToken: CONFIG.gristAccessToken,
         gristServer: CONFIG.gristServer,
+        // ❌ SUPPRIMÉ : gristAccessToken (utilise les variables d'env côté serveur)
       }),
     });
 
