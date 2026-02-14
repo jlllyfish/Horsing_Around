@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Horsing Around - Synchronisation DS</title>
+    <title>Horsing Around - Gestion des avis</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -11,153 +11,238 @@
       <!-- Header -->
       <header class="header">
         <div class="logo">
-          <!-- # LOGO ICI : Remplacer le div.logo-placeholder par ton logo SVG ou image -->
           <img src="horse.svg" alt="Logo" />
         </div>
         <h1 class="title">Horsing Around</h1>
       </header>
 
-      <!-- Stats Grid -->
-      <div class="stats-grid">
-        <!-- Card 1: Total -->
-        <div class="stat-card">
-          <div class="stat-header">
-            <!-- # ICON ICI : Icône graphique/chart pour TOTAL -->
-            <svg
-              class="stat-icon"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-            </svg>
-            <span class="stat-label">TOTAL</span>
-          </div>
-          <div class="stat-value" id="total-value">-</div>
-          <div class="stat-subtitle">Lignes</div>
-        </div>
+      <!-- Tabs Navigation -->
+      <div class="tabs-nav">
+        <button class="tab-btn active" data-tab="saisie">
+          Saisie des avis
+        </button>
+        <button class="tab-btn" data-tab="envoi">
+          Envoi des avis
+        </button>
+      </div>
 
-        <!-- Card 2: À synchroniser (ACCENT CARD) -->
-        <div class="stat-card stat-card-accent">
-          <div class="stat-header">
-            <!-- # ICON ICI : Icône horloge/attente pour À SYNCHRONISER -->
-            <svg
-              class="stat-icon"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span class="stat-label">À SYNCHRONISER</span>
-          </div>
-          <div class="stat-value" id="pending-value">-</div>
-          <div class="stat-subtitle">En attente</div>
-        </div>
+      <!-- Tab 1: Saisie des avis -->
+      <div class="tab-content active" id="tab-saisie">
+        <div class="saisie-section">
+          <h2 class="section-title">Saisir un avis</h2>
 
-        <!-- Card 3: Succès -->
-        <div class="stat-card">
-          <div class="stat-header">
-            <!-- # ICON ICI : Icône check/validation pour SUCCÈS -->
-            <svg
-              class="stat-icon"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            <span class="stat-label">SUCCÈS</span>
+          <!-- Checkbox: Avis non saisis uniquement -->
+          <div class="filter-checkbox">
+            <label>
+              <input type="checkbox" id="filter-non-saisis" />
+              <span>Afficher uniquement les avis non saisis</span>
+            </label>
           </div>
-          <div class="stat-value" id="success-value">-</div>
-          <div class="stat-subtitle">Traités</div>
-        </div>
 
-        <!-- Card 4: Échec -->
-        <div class="stat-card">
-          <div class="stat-header">
-            <!-- # ICON ICI : Icône croix/erreur pour ÉCHEC -->
-            <svg
-              class="stat-icon"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="15" y1="9" x2="9" y2="15"></line>
-              <line x1="9" y1="9" x2="15" y2="15"></line>
-            </svg>
-            <span class="stat-label">ÉCHEC</span>
+          <!-- Autocomplete Search -->
+          <div class="search-container">
+            <label for="search-nom">Rechercher un enfant</label>
+            <input
+              type="text"
+              id="search-nom"
+              placeholder="Commencez à taper un nom..."
+              autocomplete="off"
+            />
+            <div id="autocomplete-list" class="autocomplete-list hidden"></div>
           </div>
-          <div class="stat-value" id="error-value">-</div>
-          <div class="stat-subtitle">Erreurs</div>
-        </div>
-        <!-- Card 5: Avis Saisis -->
-        <div class="stat-card">
-          <div class="stat-header">
-            <!-- # ICON ICI : Icône stylo pour AVIS SAISIS -->
-            <svg
-              class="stat-icon"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"
-              ></path>
-            </svg>
-            <span class="stat-label">AVIS SAISIS</span>
+
+          <!-- Search Results Counter -->
+          <div id="search-counter" class="search-counter hidden">
+            <span id="counter-text">0 résultat(s)</span>
           </div>
-          <div class="stat-value" id="avis-value">- / -</div>
-          <div class="stat-subtitle">Complétés</div>
+
+          <!-- Selected Info - Navigation -->
+          <div id="selected-info" class="selected-info">
+            <div class="info-card">
+              <div class="info-navigation">
+                <button id="prev-btn" class="nav-arrow" title="Précédent">
+                  ← Précédent
+                </button>
+                <span id="nav-counter" class="nav-counter">- / -</span>
+                <button id="next-btn" class="nav-arrow" title="Suivant">
+                  Suivant →
+                </button>
+              </div>
+              <h3 id="selected-name">Sélectionnez un enfant</h3>
+              <div class="info-details">
+                <p><strong>Prénom :</strong> <span id="selected-prenom">-</span></p>
+                <p><strong>Date de naissance :</strong> <span id="selected-naissance">-</span></p>
+                <p><strong>Dossier :</strong> <span id="selected-dossier">-</span></p>
+                <p><strong>ID record :</strong> <span id="selected-record-id">-</span></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Avis Input -->
+          <div class="avis-input-container">
+            <label for="avis-text">Avis de la commission</label>
+            <textarea
+              id="avis-text"
+              placeholder="Saisissez l'avis ici..."
+              rows="6"
+              disabled
+            ></textarea>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="actions-buttons">
+            <button id="valider-btn" class="btn btn-primary" disabled>
+              Valider l'avis
+            </button>
+            <button id="clear-btn" class="btn btn-secondary" disabled>
+              Annuler
+            </button>
+          </div>
+
+          <!-- Status Message for Saisie -->
+          <div id="status-message-saisie" class="status-message hidden"></div>
         </div>
       </div>
 
-      <!-- Actions Section -->
-      <div class="actions-section">
-        <h2 class="actions-title">Actions</h2>
-        <div class="actions-buttons">
-          <button id="launch-btn" class="btn btn-primary">
-            Lancer le traitement
-          </button>
-          <button id="refresh-btn" class="btn btn-secondary">
-            ↻ Rafraîchir
-          </button>
-        </div>
-      </div>
+      <!-- Tab 2: Envoi des avis (original dashboard) -->
+      <div class="tab-content" id="tab-envoi">
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+          <!-- Card 1: Total -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <svg
+                class="stat-icon"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              <span class="stat-label">TOTAL</span>
+            </div>
+            <div class="stat-value" id="total-value">-</div>
+            <div class="stat-subtitle">Lignes</div>
+          </div>
 
-      <!-- Status Message -->
-      <div id="status-message" class="status-message hidden"></div>
+          <!-- Card 2: À synchroniser -->
+          <div class="stat-card stat-card-accent">
+            <div class="stat-header">
+              <svg
+                class="stat-icon"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span class="stat-label">À SYNCHRONISER</span>
+            </div>
+            <div class="stat-value" id="pending-value">-</div>
+            <div class="stat-subtitle">En attente</div>
+          </div>
 
-      <!-- Progress Bar (hidden by default) -->
-      <div id="progress-container" class="progress-container hidden">
-        <div class="progress-bar">
-          <div id="progress-fill" class="progress-fill"></div>
+          <!-- Card 3: Succès -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <svg
+                class="stat-icon"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span class="stat-label">SUCCÈS</span>
+            </div>
+            <div class="stat-value" id="success-value">-</div>
+            <div class="stat-subtitle">Traités</div>
+          </div>
+
+          <!-- Card 4: Échec -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <svg
+                class="stat-icon"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg>
+              <span class="stat-label">ÉCHEC</span>
+            </div>
+            <div class="stat-value" id="error-value">-</div>
+            <div class="stat-subtitle">Erreurs</div>
+          </div>
+
+          <!-- Card 5: Avis Saisis -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <svg
+                class="stat-icon"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"
+                ></path>
+              </svg>
+              <span class="stat-label">AVIS SAISIS</span>
+            </div>
+            <div class="stat-value" id="avis-value">- / -</div>
+            <div class="stat-subtitle">Complétés</div>
+          </div>
         </div>
-        <div id="progress-text" class="progress-text">
-          Traitement en cours...
+
+        <!-- Actions Section -->
+        <div class="actions-section">
+          <h2 class="actions-title">Actions</h2>
+          <div class="actions-buttons">
+            <button id="launch-btn" class="btn btn-primary">
+              Lancer le traitement
+            </button>
+            <button id="refresh-btn" class="btn btn-secondary">
+              ↻ Rafraîchir
+            </button>
+          </div>
+        </div>
+
+        <!-- Status Message -->
+        <div id="status-message" class="status-message hidden"></div>
+
+        <!-- Progress Bar -->
+        <div id="progress-container" class="progress-container hidden">
+          <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <div id="progress-text" class="progress-text">
+            Traitement en cours...
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Grist API -->
     <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
     <script src="script.js"></script>
   </body>
