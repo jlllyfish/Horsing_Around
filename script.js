@@ -277,7 +277,7 @@ function filterRecordsSaisie(searchText, nonSaisisOnly) {
     filtered = filtered.filter((r) => {
       const nom = (r.fields.nom || "").toLowerCase();
       const prenom = (r.fields.prenom || "").toLowerCase();
-      return nom.includes(search) || prenom.includes(search);
+      return nom.startsWith(search);
     });
   }
 
